@@ -6,11 +6,23 @@ module.exports.calculateElectricityCost = (fromDate, toDate, usage) => {
   // Calculate the number of days between the two dates (inclusive)
   const daysInRange = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
 
-  // Baseline allocation per day
-  const baselinePerDay = 19.6; // kwh
+  // Initialize variables
+  let totalBaseline = 0;
 
-  // Monthly baseline allocation based on the number of days in the range
-  const totalBaseline = baselinePerDay * daysInRange;
+  // Calculate the baseline allocation for each day based on the month
+  let currentDate = new Date(startDate);
+  while (currentDate <= endDate) {
+    const currentMonth = currentDate.getMonth() + 1; // Months are 0-based, so add 1
+
+    // Determine the baseline based on the month
+    const baselinePerDay = (currentMonth >= 6 && currentMonth <= 9) ? 19.3 : 12.1;
+
+    // Add the daily baseline to the total baseline
+    totalBaseline += baselinePerDay;
+
+    // Move to the next day
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
 
   // Cost per kW/h
   const baselineRate = 0.32; // cents per kW/h
@@ -28,10 +40,10 @@ module.exports.calculateElectricityCost = (fromDate, toDate, usage) => {
 
   return {
     daysInRange,
-    totalBaseline,
+    totalBaseline: totalBaseline.toFixed(2),
     excessUsage,
-    baselineCost: Number(baselineCost.toFixed(2)),
-    excessCost: Number(excessCost.toFixed(2)),
-    totalCost: Number(totalCost.toFixed(2))
+    baselineCost: baselineCost.toFixed(2),
+    excessCost: excessCost.toFixed(2),
+    totalCost: totalCost.toFixed(2)
   };
 };
